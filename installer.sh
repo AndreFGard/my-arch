@@ -183,12 +183,10 @@ mount -o subvol=@var /dev/$selslash /mnt/var
 else 
 mount /dev/$selslash /mnt
 fi
+
+#noatime,compress=zstd,commit=120 are the chris titus flags
 #echo "THIS IS YOUR FUCKING  / without any spaces FUCK:$selslash"
 #i was mad when i wrote this sorry
-
-
-
-
 echo "mounted slash"
 lsblk | grep "$selslash"
 sleep 2
