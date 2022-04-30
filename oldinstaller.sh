@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#!/usr/bin/env bash
 source functions.sh
 firststep(){
 #the seconds step is invoked by postchroot.sh after... chrooting.
@@ -12,6 +11,7 @@ echo -ne "
 "
 
 #########                   CONFIGURING PARTITIONS          ###########
+
 clear
 logo
 lsblk -o NAME,SIZE,FSTYPE
@@ -79,6 +79,7 @@ echo -ne "
         /boot: /dev/selefi
 "
 lsblk -o PATH,NAME,SIZE,FSTYPE | grep "$sda"
+
 options=("Proceed?" "Yes" "No")
 select_option $? 1 "${options[@]}"
 case $? in
@@ -87,24 +88,6 @@ case $? in
 2) lsblk; exit 1;;
 esac
 
-
-
-
-###############           MAKING FILESYSTEMS          #######
-logo
-echohead "Making Filesystem for EFI part ($selefi)"
-
-echohead "Do you want to format your boot partition? (no if you want to dualboot)"
-options=("Yes" "no")
-select_option $? 1 "${options[@]}"
-
-case $? in
-0) mkfs.fat -F32 /dev/$selefi;;
-1) echo "owok";;
-esac
-setoption erasefi $?
-clear
-logo
 
 #####           CHOOSING FILESYSTEMS        ######
 clear
@@ -121,6 +104,31 @@ case $? in
 esac
 centerhead "Selected $selFS"
 setoption selFS $selFS
+sleep 1
+
+#####           MAKING FILESYSTEMS          #######
+logo
+echohead "Making Filesystem for EFI part ($selefi)"
+
+echohead "Do you want to format your boot partition? (no if you want to dualboot)"
+options=("Yes" "no")
+select_option $? 1 "${options[@]}"
+
+case $? in
+0) mkfs.fat -F32 /dev/$selefi;;
+1) echo "owok";;
+esac
+setoption erasefi $?
+
+
+sleep 2
+
+clear
+logo
+
+echohead "Making Filesystem and formatting $selFS for slash part ($selslash)"
+
+
 
 
 if [ $selFS = ext4 ]; then
@@ -128,9 +136,9 @@ mkfs.ext4 -F /dev/$selslash
 else
 mkfs.$selFS -f /dev/$selslash
 fi
-sleep 3
 
 setoption selFS "$selFS"
+
 
 #####       doing mirror stuff       #####
 funcmirror(){
@@ -156,38 +164,10 @@ funcmirror
 clear
 logo
 echohead "Mounting future slash and efi on /mnt"
-#mount /dev/$selslash /mnt
-
-if [ $selFS = "btrfs" ]; then
 mount /dev/$selslash /mnt
-btrfs su cr /mnt/@
-btrfs su cr /mnt/@var
-btrfs su cr /mnt/@opt
-btrfs su cr /mnt/@tmp
-btrfs su cr /mnt/@.snapshots
-umount /mnt
-
-
-
-mount -o noatime,commit=120,compress=zstd,space_cache=v2,subvol=@ /dev/$selslash /mnt
-# You need to manually create folder to mount the other subvolumes at
-mkdir /mnt/{boot,home,var,opt,tmp,.snapshots}
-
-mount -o noatime,commit=120,compress=zstd,space_cache=v2,subvol=@opt /dev/$selslash /mnt/opt
-
-mount -o noatime,commit=120,compress=zstd,space_cache=v2,subvol=@tmp /dev/$selslash /mnt/tmp
-
-mount -o noatime,commit=120,compress=zstd,space_cache=v2,subvol=@.snapshots /dev/$selslash /mnt/.snapshots
-
-
-mount -o subvol=@var /dev/$selslash /mnt/var
-else 
-mount /dev/$selslash /mnt
-fi
-
-#noatime,compress=zstd,commit=120 are the chris titus
 #echo "THIS IS YOUR FUCKING  / without any spaces FUCK:$selslash"
 #i was mad when i wrote this sorry
+
 echo "mounted slash"
 lsblk | grep "$selslash"
 sleep 2
@@ -201,11 +181,8 @@ sleep 2
 clear
 logo
 echohead "Installing base and kernel packages with pacstrap"
-if [ $selFS = "btrfs" ]; then
-pacstrap /mnt base linux-zen linux-firmware btrfs-progs
-else 
-pacstrap /mnt base linux-zen linux-firmware
-fi
+pacstrap /mnt base linux-zen linux-firmware vim
+
 #####           FSTAB           ####
 
 
@@ -252,15 +229,14 @@ cat /mnt/etc/fstab
 sleep 2
 echohead "Chrooting soon"
 
-#cd /mnt
-#git clone https://github.com/GuaximFsg/my-arch
-#cp /root/my-arch/conffile.sh /mnt/my-arch/conffile.sh
-#cd
-#sleep 5
-#cp /root/my-arch/yourconf.sh /mnt/my-arch
+cd /mnt
+git clone https://github.com/GuaximFsg/arch-dre
+cp /root/arch-dre/conffile.sh /mnt/arch-dre/conffile.sh
+cd
+sleep 5
+cp /root/arch-dre/yourconf.sh /mnt/arch-dre
 
-cp -r /root/my-arch /mnt
-arch-chroot /mnt my-arch/postchroot.sh
+arch-chroot /mnt arch-dre/postchroot.sh
 
 }
 
@@ -272,6 +248,27 @@ arch-chroot /mnt my-arch/postchroot.sh
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+yourconf(){
+bash /arch-dre/yourconf.sh
+
+}
 
 secondstep(){
 ### chrooting
@@ -393,6 +390,7 @@ options=("xfce4" "KDE (best de)" "gnome (bad)" "EOS-sway" "none")
 select_option $? 1 "${options[@]}"
 
 case $? in
+
 0) pacman -S --noconfirm xfce4 thunar xfce4-terminal lightdm-gtk-greeter lightdm lightdm-slick-greeter; systemctl enable lightdm;;
 1) pacman -S plasma dolphin kate konsole sddm --noconfirm; systemctl enable sddm;;
 2) pacman -S gnome gdm nautilus gnome-terminal --noconfirm ; systemctl enable gdm;;
@@ -401,6 +399,10 @@ case $? in
 esac
 }
 setde
+
+
+
+
 
 #######         DOING SUDO STUFF
 confpacsudo
@@ -419,10 +421,12 @@ pacman -S --noconfirm --needed $usersoftware
 echohead "Do you want to install all the bloat that me, andre, the creator of this shitty script, usually installs?"
 options=("Yes" "No")
 select_option $? 1 "${options[@]}"
+
 case $? in
 0) pacman -S --needed bluez pulseaudio-bluetooth bluetooth git ffmpegthumb firefox telegram-desktop zsh;;
 1) echo "owok";;
 esac
+
 
 ### bye
 clear
@@ -430,4 +434,8 @@ logo
 echohead "It was a pleasure to install your system!"
 sleep 2
 exit
+
+
 }
+
+

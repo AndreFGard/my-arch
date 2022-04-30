@@ -172,6 +172,7 @@ echo "Set timezone is:$seltz"
 echo "Set timezone is:$seltz" >> /arch-dre/variables.log
 ln -sf /usr/share/zoneinfo/$seltz /etc/localtime
 hwclock --systohc
+timedatectl set-ntp true
 
 #for myself: previous versions of this are saved in functionslegacy.sh
 }
