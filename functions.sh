@@ -258,8 +258,7 @@ systemctl disable localedoer.timer
 rm /etc/systemd/system/localedoer.timer
 rm /etc/systemd/system/localedoer.service
 rm /etc/systemd/system/script.sh
-sleep 10
-systemctl reboot
+
 " > /etc/systemd/system/script.sh
 chmod +x /etc/systemd/system/script.sh
 
