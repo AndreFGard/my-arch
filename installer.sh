@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+
 #!/usr/bin/env bash
 source functions.sh
 firststep(){
@@ -165,6 +165,8 @@ btrfs su cr /mnt/@var
 btrfs su cr /mnt/@opt
 btrfs su cr /mnt/@tmp
 btrfs su cr /mnt/@.snapshots
+btrfs su cr /mnt/@var-log
+btrfs su cr /mnt/@swap
 umount /mnt
 
 
@@ -179,8 +181,14 @@ mount -o noatime,commit=120,compress=zstd,space_cache=v2,subvol=@tmp /dev/$selsl
 
 mount -o noatime,commit=120,compress=zstd,space_cache=v2,subvol=@.snapshots /dev/$selslash /mnt/.snapshots
 
+mkdir /mnt/var/cache
+mount -o subvol=@var /dev/$selslash /mnt/var/cache
 
-mount -o subvol=@var /dev/$selslash /mnt/var
+mkdir /mnt/var/log
+mount -o subvol=@var-log /dev/$selslash /mnt/var/log
+
+mkdir /swap
+mount -o subvol=@swap /dev/$selslash /mnt/swap
 else 
 mount /dev/$selslash /mnt
 fi
@@ -275,13 +283,13 @@ arch-chroot /mnt my-arch/postchroot.sh
 
 secondstep(){
 ### chrooting
-#source arch-dre/functions.sh
+#source my-arch/functions.sh
 
 
 
 #####           TIMEZONE, LOCALE AND SIMILAR        #####
 cd /
-source arch-dre/functions.sh
+source my-arch/functions.sh
 clear
 logo
 set_timezone
@@ -366,7 +374,7 @@ funcitaur(){
     pacman -S --needed --noconfirm base-devel
     mkdir /yay
     chown -R $youruser /yay
-    runuser -u $youruser /arch-dre/user.sh
+    runuser -u $youruser /my-arch/user.sh
     pacman -U /yay/yay-bin/yay-b*
     rm -r /yay
 }

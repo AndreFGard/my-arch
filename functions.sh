@@ -10,7 +10,7 @@ echo "$1=$2" >> conffile.sh
 }
 
 setochrooption(){
-echo "$1=$2" >> /arch-dre/conffile.sh
+echo "$1=$2" >> /my-arch/conffile.sh
 }
 
 
@@ -169,7 +169,7 @@ echo "Set timezone is:$seltz"
 
 
 
-echo "Set timezone is:$seltz" >> /arch-dre/variables.log
+echo "Set timezone is:$seltz" >> /my-arch/variables.log
 ln -sf /usr/share/zoneinfo/$seltz /etc/localtime
 hwclock --systohc
 timedatectl set-ntp true
@@ -211,7 +211,7 @@ esac
 
 
 
-echo "localname is $localname" >> /arch-dre/variables.log
+echo "localname is $localname" >> /my-arch/variables.log
 sleep 3
 
 echo "localectl pre localconf is" >> other/installer.log

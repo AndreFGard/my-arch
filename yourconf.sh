@@ -92,7 +92,7 @@ if [ $installyaybin = 1 ]; then
   sudo pacman -S --needed --noconfirm base-devel
   mkdir /yay
   chown -R $youruser /yay
-  runuser -u $youruser /arch-dre/user.sh
+  runuser -u $youruser /my-arch/user.sh
   pacman -U --noconfirm/yay/yay-bin/yay-bin*
   rm -r /yay
 fi
