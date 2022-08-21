@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#!/usr/bin/env bash
+
 source functions.sh
 firststep(){
 #the seconds step is invoked by postchroot.sh after... chrooting.
